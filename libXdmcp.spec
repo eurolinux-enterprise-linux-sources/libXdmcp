@@ -1,44 +1,49 @@
-Summary: X.Org X11 libXdmcp runtime library
+Summary: X Display Manager Control Protocol library
 Name: libXdmcp
-Version: 1.0.3
-Release: 1%{?dist}
+Version: 1.1.1
+Release: 3%{?dist}
 License: MIT
 Group: System Environment/Libraries
 URL: http://www.x.org
-BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 Source0: ftp://ftp.x.org/pub/individual/lib/%{name}-%{version}.tar.bz2
 
-BuildRequires: pkgconfig
+Patch0: REVERT-libXdmcp-1.1.1-xalloc.patch
+
 BuildRequires: xorg-x11-proto-devel
+BuildRequires: xmlto
+BuildRequires: xorg-x11-util-macros autoconf automake libtool
 
 %description
-X.Org X11 libXdmcp runtime library
+X Display Manager Control Protocol library.
 
 %package devel
-Summary: X.Org X11 libXdmcp development package
+Summary: Development files for %{name}
 Group: Development/Libraries
 Requires: %{name} = %{version}-%{release}
-Requires: xorg-x11-proto-devel
-Requires: pkgconfig
 
 %description devel
-X.Org X11 libXdmcp development package
+libXdmcp development package.
 
 %prep
 %setup -q
+%patch0 -R -p1 -b .xalloc
 
 %build
+autoreconf -f -i -v || exit 1
 %configure --disable-static
 make %{?_smp_mflags}
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
-make install DESTDIR=$RPM_BUILD_ROOT
+make install DESTDIR=$RPM_BUILD_ROOT INSTALL="install -p"
 
 # We intentionally don't ship *.la files
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
+
+# manual fixup later
+rm -rf $RPM_BUILD_ROOT%{_docdir}
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -48,17 +53,46 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root,-)
-%doc AUTHORS COPYING ChangeLog
+%doc AUTHORS COPYING ChangeLog Wraphelp.README.crypto
 %{_libdir}/libXdmcp.so.6
 %{_libdir}/libXdmcp.so.6.0.0
 
 %files devel
 %defattr(-,root,root,-)
+%doc README
 %{_includedir}/X11/Xdmcp.h
 %{_libdir}/libXdmcp.so
 %{_libdir}/pkgconfig/xdmcp.pc
 
 %changelog
+* Mon Aug 27 2012 Adam Jackson <ajax@redhat.com> 1.1.1-3
+- REVERT-libXdmcp-1.1.1-xalloc.patch: Restore definitions (but not
+  declarations) of Xalloc and friends for RHEL6 ABI compat.
+
+* Thu Jul 19 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.1.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_18_Mass_Rebuild
+
+* Thu Mar 08 2012 Adam Jackson <ajax@redhat.com> 1.1.1-1
+- libXdmcp 1.1.1
+
+* Fri Jan 13 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.1.0-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_17_Mass_Rebuild
+
+* Mon Feb 07 2011 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.1.0-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_15_Mass_Rebuild
+
+* Mon Nov 08 2010 Adam Jackson <ajax@redhat.com> 1.1.0-1
+- libXdmcp 1.1.0
+
+* Wed Oct 21 2009 Parag <paragn@fedoraproject.org> - 1.0.3-3
+- Merge-Review #226068
+- make is not verbose
+
+* Thu Oct 08 2009 Parag <paragn@fedoraproject.org> - 1.0.3-2
+- Merge-Review #226068
+- Removed BR:pkgconfig
+- Few spec cleanups.
+
 * Thu Sep 24 2009 Peter Hutterer <peter.hutterer@redhat.com> 1.0.3-1
 - libXdmcp 1.0.3
 - libXdmcp-1.0.2-namespace-pollution.patch: drop
