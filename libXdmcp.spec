@@ -1,7 +1,7 @@
 Summary: X Display Manager Control Protocol library
 Name: libXdmcp
 Version: 1.1.1
-Release: 4%{?dist}
+Release: 6.1%{?dist}
 License: MIT
 Group: System Environment/Libraries
 URL: http://www.x.org
@@ -12,6 +12,8 @@ BuildRequires: xorg-x11-util-macros
 BuildRequires: autoconf automake libtool
 BuildRequires: xorg-x11-proto-devel
 BuildRequires: xmlto
+
+Patch0: fips-docs.patch
 
 %description
 X Display Manager Control Protocol library.
@@ -26,6 +28,8 @@ libXdmcp development package.
 
 %prep
 %setup -q
+
+%patch0 -p1 -b .fips-docs
 
 %build
 autoreconf -v --install --force
@@ -63,6 +67,17 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/xdmcp.pc
 
 %changelog
+* Wed Feb 12 2014 Adam Jackson <ajax@redhat.com> 1.1.1-6.1
+- Mass rebuild
+
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 1.1.1-6
+- Mass rebuild 2013-12-27
+
+* Tue Dec 17 2013 Soren Sandmann <ssp@redhat.com> - 1.1.4-5
+- Add note to README about the lack of FIPS compliance for DMCP
+  authentications.
+  Bug 994193
+
 * Thu Mar 07 2013 Peter Hutterer <peter.hutterer@redhat.com> - 1.1.1-4
 - autoreconf for aarch64
 
