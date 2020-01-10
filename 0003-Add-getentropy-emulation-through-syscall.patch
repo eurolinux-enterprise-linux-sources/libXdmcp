@@ -1,0 +1,74 @@
+From 4e166987d7e7d37d1f5cc71c0eb7918dea4fe443 Mon Sep 17 00:00:00 2001
+From: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+Date: Thu, 4 May 2017 11:13:51 +0200
+Subject: [PATCH libXdmcp 3/3] Add getentropy emulation through syscall
+
+RHEL/f24/f25 only patch
+
+Signed-off-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+---
+ Key.c | 48 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 48 insertions(+)
+
+diff --git a/Key.c b/Key.c
+index d61ad0e..4b0e9c0 100644
+--- a/Key.c
++++ b/Key.c
+@@ -76,6 +76,54 @@ insecure_getrandom_buf (unsigned char *auth, int len)
+     getbits (highbits, auth + 4);
+ }
+ 
++#ifndef HAVE_GETENTROPY
++#include <sys/syscall.h>
++#include <errno.h>
++
++/* code taken from libressl, license: */
++/*
++ * Copyright (c) 2014 Theo de Raadt <deraadt@openbsd.org>
++ * Copyright (c) 2014 Bob Beck <beck@obtuse.com>
++ *
++ * Permission to use, copy, modify, and distribute this software for any
++ * purpose with or without fee is hereby granted, provided that the above
++ * copyright notice and this permission notice appear in all copies.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
++ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
++ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
++ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
++ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
++ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
++ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
++ *
++ * Emulation of getentropy(2) as documented at:
++ * http://man.openbsd.org/getentropy.2
++ */
++#ifdef __NR_getrandom
++
++static int
++getentropy(void *buf, size_t len)
++{
++	int pre_errno = errno;
++	int ret;
++	if (len > 256)
++		return (-1);
++	do {
++		ret = syscall(__NR_getrandom, buf, len, 0);
++	} while (ret == -1 && errno == EINTR);
++
++	if (ret != len)
++		return (-1);
++	errno = pre_errno;
++
++	return (0);
++}
++#define HAVE_GETENTROPY 1
++#endif /* __NR_getrandom */
++
++#endif /* HAVE_GETENTROPY */
++
+ static void
+ arc4random_buf (void *auth, int len)
+ {
+-- 
+2.9.3
+

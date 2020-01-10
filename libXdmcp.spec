@@ -1,7 +1,7 @@
 Summary: X Display Manager Control Protocol library
 Name: libXdmcp
-Version: 1.1.1
-Release: 6.1%{?dist}
+Version: 1.1.2
+Release: 6%{?dist}
 License: MIT
 Group: System Environment/Libraries
 URL: http://www.x.org
@@ -14,6 +14,9 @@ BuildRequires: xorg-x11-proto-devel
 BuildRequires: xmlto
 
 Patch0: fips-docs.patch
+Patch1: 0001-Use-getentropy-if-arc4random_buf-is-not-available.patch
+Patch2: 0002-Fix-compilation-error-when-arc4random_buf-is-not-ava.patch
+Patch3: 0003-Add-getentropy-emulation-through-syscall.patch
 
 %description
 X Display Manager Control Protocol library.
@@ -30,6 +33,9 @@ libXdmcp development package.
 %setup -q
 
 %patch0 -p1 -b .fips-docs
+%patch1 -p1 -b .cve-2017-2625
+%patch2 -p1 -b .cve-2017-2625
+%patch3 -p1 -b .cve-2017-2625
 
 %build
 autoreconf -v --install --force
@@ -67,6 +73,27 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/pkgconfig/xdmcp.pc
 
 %changelog
+* Tue Mar 28 2017 Benjamin Tissoires <benjamin.tissoires@redhat.com> 1.1.2-6
+- Do not pull libbsd, use getentropy or getrandom syscall instead
+
+* Wed Mar 01 2017 Benjamin Tissoires <benjamin.tissoires@redhat.com> 1.1.2-5
+- Use libbsd for randoms (CVE-2017-2625, rhbz#1427716)
+
+* Fri Feb 10 2017 Fedora Release Engineering <releng@fedoraproject.org> - 1.1.2-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
+* Thu Feb 04 2016 Fedora Release Engineering <releng@fedoraproject.org> - 1.1.2-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
+
+* Wed Jun 17 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.1.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild
+
+* Mon Mar 23 2015 Benjamin Tissoires <benjamin.tissoires@redhat.com> 1.1.2-1
+- libXdmcp 1.1.2
+
+* Sun Aug 17 2014 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 1.1.1-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_21_22_Mass_Rebuild
+
 * Wed Feb 12 2014 Adam Jackson <ajax@redhat.com> 1.1.1-6.1
 - Mass rebuild
 

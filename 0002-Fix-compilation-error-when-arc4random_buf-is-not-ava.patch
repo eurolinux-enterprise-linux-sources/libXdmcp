@@ -1,0 +1,53 @@
+From 95bef09f135a70ba1174a0021f441b0bb62a9bec Mon Sep 17 00:00:00 2001
+From: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+Date: Thu, 4 May 2017 11:05:15 +0200
+Subject: [PATCH libXdmcp 2/3] Fix compilation error when arc4random_buf is not
+ available
+
+Not sure how I missed that, but I did.
+
+Also rename emulate_getrandom_buf() into insecure_getrandom_buf() as
+requested in the previous patch reviews.
+
+Last, getbits() expects an unsigned char, so remove the warning.
+
+Signed-off-by: Benjamin Tissoires <benjamin.tissoires@gmail.com>
+---
+ Key.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Key.c b/Key.c
+index 70607d0..d61ad0e 100644
+--- a/Key.c
++++ b/Key.c
+@@ -65,15 +65,15 @@ getbits (long data, unsigned char *dst)
+ #ifndef HAVE_ARC4RANDOM_BUF
+ 
+ static void
+-emulate_getrandom_buf (char *auth, int len)
++insecure_getrandom_buf (unsigned char *auth, int len)
+ {
+     long    lowbits, highbits;
+ 
+     srandom ((int)getpid() ^ time((Time_t *)0));
+     lowbits = random ();
+     highbits = random ();
+-    getbits (lowbits, key->data);
+-    getbits (highbits, key->data + 4);
++    getbits (lowbits, auth);
++    getbits (highbits, auth + 4);
+ }
+ 
+ static void
+@@ -88,7 +88,7 @@ arc4random_buf (void *auth, int len)
+ 	return;
+ #endif /* HAVE_GETENTROPY */
+ 
+-    emulate_getrandom_buf (auth, len);
++    insecure_getrandom_buf (auth, len);
+ }
+ 
+ #endif /* !defined(HAVE_ARC4RANDOM_BUF) */
+-- 
+2.9.3
+
